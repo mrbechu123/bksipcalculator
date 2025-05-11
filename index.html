@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated SIP Return Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode Default */
+            --primary-color: #28a745; /* Green for finance */
+            --secondary-color: #17a2b8; /* Teal for accents */
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --input-border-color: #ddd;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --deep-shadow-color: rgba(0, 0, 0, 0.15);
+            --coin-color: #ffd700;
+            --header-text-color: var(--primary-color);
+            --section-bg-color: #fdfdfd;
+            --label-color: #555;
+            --button-text-color: white;
+            --disclaimer-color: #777;
+            --footer-color: #888;
+            --table-header-bg: var(--primary-color);
+            --table-header-text: white;
+            --table-even-row-bg: #f9f9f9;
+            --table-value-color: var(--secondary-color);
+        }
+
+        body.night-mode {
+            /* Night Mode Overrides */
+            --primary-color: #3fb950; /* Lighter Green */
+            --secondary-color: #20c997; /* Lighter Teal */
+            --background-color: #0d1117;
+            --card-background: #161b22;
+            --text-color: #c9d1d9;
+            --input-border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --deep-shadow-color: rgba(0, 0, 0, 0.5);
+            --coin-color: #f0b90b;
+            --header-text-color: var(--primary-color);
+            --section-bg-color: #0d1117;
+            --label-color: #8b949e;
+            --button-text-color: #0d1117;
+            --disclaimer-color: #8b949e;
+            --footer-color: #8b949e;
+            --table-header-bg: var(--primary-color);
+            --table-header-text: #0d1117;
+            --table-even-row-bg: #10151c;
+            --table-value-color: var(--secondary-color);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        #themeToggleBtn {
+            position: fixed; top: 20px; right: 20px; background-color: var(--card-background);
+            color: var(--text-color); border: 1px solid var(--input-border-color); padding: 10px 15px;
+            border-radius: 50%; cursor: pointer; font-size: 1.5em; z-index: 1000;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+        }
+        #themeToggleBtn:hover { transform: scale(1.1); }
+
+        #star-container, #moon-container, #coin-fall-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; overflow: hidden;
+        }
+        #star-container { z-index: -3; display: none; }
+        #moon-container { z-index: -2; display: none; }
+        #coin-fall-container { z-index: -1; }
+        body.night-mode #star-container, body.night-mode #moon-container { display: block; }
+
+        .star {
+            position: absolute; width: 2px; height: 2px; background-color: white;
+            border-radius: 50%; animation: blink 2s infinite alternate;
+            box-shadow: 0 0 5px white, 0 0 10px white;
+        }
+        @keyframes blink { 0% { opacity: 0.3; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.2); } }
+
+        #moon {
+            position: absolute; top: 10vh; right: 15vw; width: 80px; height: 80px;
+            border-radius: 50%; background-color: #f0e68c;
+            box-shadow: 0 0 20px #f0e68c, 0 0 40px #f0e68c, inset -15px -10px 0px 0px #e0d67c;
+            opacity: 0; transition: opacity 0.5s ease-in-out;
+        }
+        body.night-mode #moon { opacity: 0.9; }
+
+        .falling-coin {
+            position: absolute; top: -40px; font-size: 1.5em; color: var(--coin-color);
+            user-select: none; animation: fall linear infinite;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
+
+        .container {
+            background-color: var(--card-background); padding: 30px 40px; border-radius: 15px;
+            box-shadow: 0 4px 8px var(--shadow-color), 0 10px 20px var(--deep-shadow-color);
+            width: 100%; max-width: 600px; text-align: center;
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative; z-index: 1;
+        }
+        .container:hover { transform: translateY(-5px) scale(1.01); }
+
+        header h1 {
+            color: var(--header-text-color); margin-bottom: 30px; font-size: 2.5em; font-weight: 700;
+            transition: color 0.3s ease;
+        }
+
+        .animated-title-char, .animated-title-emoji {
+            display: inline-block; position: relative;
+        }
+        .animated-title-char { animation: wave 2.5s ease-in-out infinite; }
+        .animated-title-emoji { animation: pulse-emoji 1.5s ease-in-out infinite; }
+
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes pulse-emoji {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 3px var(--secondary-color); }
+            50% { transform: scale(1.15); text-shadow: 0 0 8px var(--secondary-color), 0 0 15px var(--secondary-color); }
+        }
+
+        /* Adjusted animation delays after removing "3D " */
+        header h1 .animated-title-char:nth-child(1) { animation-delay: 0.0s; } /* S */
+        header h1 .animated-title-char:nth-child(2) { animation-delay: 0.1s; } /* I */
+        header h1 .animated-title-char:nth-child(3) { animation-delay: 0.2s; } /* P */
+        header h1 .animated-title-char:nth-child(4) { animation-delay: 0.3s; } /* Space */
+        header h1 .animated-title-char:nth-child(5) { animation-delay: 0.4s; } /* R */
+        header h1 .animated-title-char:nth-child(6) { animation-delay: 0.5s; } /* E */
+        header h1 .animated-title-char:nth-child(7) { animation-delay: 0.6s; } /* T */
+        header h1 .animated-title-char:nth-child(8) { animation-delay: 0.7s; } /* U */
+        header h1 .animated-title-char:nth-child(9) { animation-delay: 0.8s; } /* R */
+        header h1 .animated-title-char:nth-child(10) { animation-delay: 0.9s; } /* N */
+        header h1 .animated-title-char:nth-child(11) { animation-delay: 1.0s; } /* Space */
+        header h1 .animated-title-char:nth-child(12) { animation-delay: 1.1s; } /* C */
+        header h1 .animated-title-char:nth-child(13) { animation-delay: 1.2s; } /* A */
+        header h1 .animated-title-char:nth-child(14) { animation-delay: 1.3s; } /* L */
+        header h1 .animated-title-char:nth-child(15) { animation-delay: 1.4s; } /* C */
+        header h1 .animated-title-char:nth-child(16) { animation-delay: 1.5s; } /* U */
+        header h1 .animated-title-char:nth-child(17) { animation-delay: 1.6s; } /* L */
+        header h1 .animated-title-char:nth-child(18) { animation-delay: 1.7s; } /* A */
+        header h1 .animated-title-char:nth-child(19) { animation-delay: 1.8s; } /* T */
+        header h1 .animated-title-char:nth-child(20) { animation-delay: 1.9s; } /* O */
+        header h1 .animated-title-char:nth-child(21) { animation-delay: 2.0s; } /* R */
+        /* .char3d class is no longer used in the title */
+
+        .calculator-body { display: flex; flex-direction: column; gap: 30px; }
+        .input-section, .result-section {
+            background-color: var(--section-bg-color); padding: 25px; border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05), 0 2px 5px var(--shadow-color);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-section h2, .result-section h2 {
+            color: var(--header-text-color); margin-top: 0; margin-bottom: 20px; font-size: 1.8em;
+            transition: color 0.3s ease;
+        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label {
+            display: block; margin-bottom: 8px; font-weight: 600; color: var(--label-color);
+            transition: color 0.3s ease;
+        }
+        .form-group input[type="number"], .form-group select {
+            padding: 12px 10px; border: 1px solid var(--input-border-color); border-radius: 6px;
+            font-size: 1em; font-family: 'Poppins', sans-serif; background-color: var(--card-background);
+            color: var(--text-color); box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            box-sizing: border-box;
+        }
+        .form-group input[type="number"]:focus, .form-group select:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 30%, transparent), inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .tenure-input-group { display: flex; gap: 10px; }
+        .tenure-input-group input[type="number"] { flex-grow: 1; width: 70%; }
+        .tenure-input-group select { width: auto; flex-shrink: 0; min-width: 100px; }
+
+        button#calculateBtn {
+            background-image: linear-gradient(45deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--button-text-color); border: none; padding: 15px 30px; font-size: 1.1em;
+            font-weight: 600; border-radius: 8px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-image 0.3s ease, color 0.3s ease;
+            box-shadow: 0 4px 10px color-mix(in srgb, var(--primary-color) 40%, transparent);
+            width: 100%; margin-top: 10px;
+        }
+        button#calculateBtn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 6px 15px color-mix(in srgb, var(--secondary-color) 50%, transparent);
+            background-image: linear-gradient(45deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+        button#calculateBtn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px color-mix(in srgb, var(--primary-color) 30%, transparent);
+        }
+
+        #resultTable {
+            width: 100%; border-collapse: collapse; margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;
+        }
+        #resultTable th, #resultTable td {
+            padding: 15px; text-align: left; border-bottom: 1px solid var(--input-border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        #resultTable th { background-color: var(--table-header-bg); color: var(--table-header-text); font-weight: 600; }
+        #resultTable th:first-child { border-top-left-radius: 8px; }
+        #resultTable th:last-child { border-top-right-radius: 8px; }
+        #resultTable tr:nth-child(even) td { background-color: var(--table-even-row-bg); }
+        #resultTable tr:last-child td { border-bottom: none; }
+        #resultTable tr:last-child td:first-child { border-bottom-left-radius: 8px; }
+        #resultTable tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+        #resultTable td:last-child { font-weight: bold; color: var(--table-value-color); text-align: right; }
+
+        .disclaimer { font-size: 0.9em; color: var(--disclaimer-color); margin-top: 20px; transition: color 0.3s ease;}
+        footer { margin-top: 30px; font-size: 0.9em; color: var(--footer-color); transition: color 0.3s ease;}
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2em; }
+            .container { padding: 20px; margin: 10px; }
+            .input-section h2, .result-section h2 { font-size: 1.5em; }
+            button#calculateBtn { padding: 12px 20px; font-size: 1em; }
+            #resultTable th, #resultTable td { padding: 10px; font-size: 0.9em; }
+            .tenure-input-group { flex-direction: column; }
+            .tenure-input-group input[type="number"], .tenure-input-group select { width: 100%; }
+            .falling-coin { font-size: 1.2em; }
+            #moon { width: 60px; height: 60px; top: 8vh; right: 10vw; }
+            #themeToggleBtn { top: 15px; right: 15px; font-size: 1.2em; padding: 8px 12px;}
+        }
+        @media (max-width: 480px) {
+            header h1 { font-size: 1.5em; }
+            .form-group input[type="number"], .form-group select { font-size: 0.9em; }
+            .falling-coin { font-size: 1em; }
+            #moon { width: 50px; height: 50px; top: 7vh; right: 8vw; }
+            #themeToggleBtn { font-size: 1em; padding: 6px 10px;}
+        }
+    </style>
+</head>
+<body>
+    <button id="themeToggleBtn" aria-label="Toggle theme">☀️</button>
+
+    <div id="star-container"></div>
+    <div id="moon-container"><div id="moon"></div></div>
+    <div id="coin-fall-container"></div>
+
+    <div class="container">
+        <header>
+             <h1>
+                <span class="animated-title-char">S</span><span class="animated-title-char">I</span><span class="animated-title-char">P</span><span class="animated-title-char">&nbsp;</span><span class="animated-title-char">R</span><span class="animated-title-char">E</span><span class="animated-title-char">T</span><span class="animated-title-char">U</span><span class="animated-title-char">R</span><span class="animated-title-char">N</span><span class="animated-title-char">&nbsp;</span><span class="animated-title-char">C</span><span class="animated-title-char">A</span><span class="animated-title-char">L</span><span class="animated-title-char">C</span><span class="animated-title-char">U</span><span class="animated-title-char">L</span><span class="animated-title-char">A</span><span class="animated-title-char">T</span><span class="animated-title-char">O</span><span class="animated-title-char">R</span>
+                <span class="animated-title-emoji">💹</span>
+            </h1>
+        </header>
+
+        <div class="calculator-body">
+            <div class="input-section">
+                <h2>Enter SIP Details 📝</h2>
+                <div class="form-group">
+                    <label for="monthlyInvestment">Monthly Investment (₹):</label>
+                    <input type="number" id="monthlyInvestment" placeholder="e.g., 5000" min="100" step="100">
+                </div>
+                <div class="form-group">
+                    <label for="interestRate">Expected Annual Return Rate (%):</label>
+                    <input type="number" id="interestRate" placeholder="e.g., 12" min="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="timePeriodValue">Investment Time Period:</label>
+                    <div class="tenure-input-group">
+                        <input type="number" id="timePeriodValue" placeholder="e.g., 10(Y), 120(M), 3650(D)" min="1" step="1">
+                        <select id="timePeriodUnit">
+                            <option value="years" selected>Years</option>
+                            <option value="months">Months</option>
+                            <option value="days">Days</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="calculateBtn">Calculate SIP Returns 🚀</button>
+            </div>
+
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h2>Your SIP Return Summary 📊</h2>
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>💰 Invested Amount</td>
+                            <td id="investedAmountResult"></td>
+                        </tr>
+                        <tr>
+                            <td>🏆 Total Value (Maturity)</td>
+                            <td id="totalValueResult"></td>
+                        </tr>
+                        <tr>
+                            <td>💹 Profit Earned</td>
+                            <td id="profitResult"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="disclaimer">💡 All values are approximate. Time period in days is converted to months using an average of ~30.4375 days/month. Returns are not guaranteed and depend on market conditions.</p>
+            </div>
+        </div>
+        <footer><p>&copy; 2024 Your Awesome SIP Calculator</p></footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const starContainer = document.getElementById('star-container');
+
+            // --- Theme Toggle Logic ---
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                body.classList.add(currentTheme);
+                if (currentTheme === 'night-mode') {
+                    themeToggleBtn.textContent = '☀️';
+                    if (starContainer && starContainer.children.length === 0) generateStars(100);
+                } else {
+                    themeToggleBtn.textContent = '🌙';
+                }
+            } else {
+                 themeToggleBtn.textContent = '🌙'; // Default to light mode
+            }
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    body.classList.toggle('night-mode');
+                    if (body.classList.contains('night-mode')) {
+                        themeToggleBtn.textContent = '☀️';
+                        localStorage.setItem('theme', 'night-mode');
+                        if (starContainer && starContainer.children.length === 0) generateStars(100);
+                    } else {
+                        themeToggleBtn.textContent = '🌙';
+                        localStorage.setItem('theme', 'light-mode');
+                    }
+                });
+            }
+
+            function generateStars(numStars) { /* ... (same as before) ... */
+                if (!starContainer) return;
+                starContainer.innerHTML = '';
+                for (let i = 0; i < numStars; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('star');
+                    star.style.top = Math.random() * 100 + 'vh';
+                    star.style.left = Math.random() * 100 + 'vw';
+                    star.style.animationDelay = Math.random() * 2 + 's';
+                    star.style.animationDuration = (Math.random() * 1 + 1.5) + 's';
+                    starContainer.appendChild(star);
+                }
+            }
+
+            // --- Coin Fall Logic ---
+            const coinContainer = document.getElementById('coin-fall-container');
+            const coinTypes = ['$', '€', '¥', '£', '🪙', '₹'];
+            function createCoin() { /* ... (same as before) ... */
+                if (!coinContainer) return;
+                const coin = document.createElement('div');
+                coin.classList.add('falling-coin');
+                coin.textContent = coinTypes[Math.floor(Math.random() * coinTypes.length)];
+                coin.style.left = Math.random() * 100 + 'vw';
+                const duration = Math.random() * 3 + 4;
+                coin.style.animationDuration = duration + 's';
+                const delay = Math.random() * 5;
+                coin.style.animationDelay = delay + 's';
+                coinContainer.appendChild(coin);
+                coin.addEventListener('animationend', () => { coin.remove(); });
+            }
+            const numberOfCoinsToStart = 15;
+            for (let i = 0; i < numberOfCoinsToStart; i++) { createCoin(); }
+            setInterval(createCoin, 700);
+
+
+            // --- SIP Calculator Logic ---
+            const monthlyInvestmentInput = document.getElementById('monthlyInvestment');
+            const interestRateInput = document.getElementById('interestRate');
+            const timePeriodValueInput = document.getElementById('timePeriodValue');
+            const timePeriodUnitSelect = document.getElementById('timePeriodUnit');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resultSection = document.getElementById('resultSection');
+
+            const investedAmountResultEl = document.getElementById('investedAmountResult');
+            const totalValueResultEl = document.getElementById('totalValueResult');
+            const profitResultEl = document.getElementById('profitResult');
+
+            const DAYS_IN_YEAR_AVG = 365.25;
+            const MONTHS_IN_YEAR = 12;
+            const AVG_DAYS_IN_MONTH = DAYS_IN_YEAR_AVG / MONTHS_IN_YEAR;
+
+            function formatToRupees(number) {
+                return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+            }
+
+            if (calculateBtn) {
+                calculateBtn.addEventListener('click', () => {
+                    const P_sip = parseFloat(monthlyInvestmentInput.value);
+                    const annualRate = parseFloat(interestRateInput.value);
+                    const timeValue = parseFloat(timePeriodValueInput.value);
+                    const timeUnit = timePeriodUnitSelect.value;
+
+                    if (isNaN(P_sip) || P_sip <= 0) {
+                        alert('Please enter a valid Monthly Investment amount. 🧐');
+                        monthlyInvestmentInput.focus(); return;
+                    }
+                    if (isNaN(annualRate) || annualRate < 0) {
+                        alert('Please enter a valid non-negative Expected Annual Return Rate. 📈');
+                        interestRateInput.focus(); return;
+                    }
+                    if (isNaN(timeValue) || timeValue <= 0) {
+                        alert('Please enter a valid Investment Time Period. ⏳');
+                        timePeriodValueInput.focus(); return;
+                    }
+
+                    let n_months;
+                    if (timeUnit === 'years') {
+                        n_months = timeValue * MONTHS_IN_YEAR;
+                    } else if (timeUnit === 'months') {
+                        n_months = timeValue;
+                    } else {
+                        n_months = timeValue / AVG_DAYS_IN_MONTH;
+                    }
+
+                    if (n_months <= 0) {
+                        alert('Calculated investment period in months must be positive. ⏳');
+                        timePeriodValueInput.focus(); return;
+                    }
+
+                    const i_monthly = (annualRate / MONTHS_IN_YEAR) / 100;
+                    const investedAmount = P_sip * n_months;
+                    let totalValue;
+
+                    if (i_monthly === 0) {
+                        totalValue = investedAmount;
+                    } else {
+                        totalValue = P_sip * ( (Math.pow(1 + i_monthly, n_months) - 1) / i_monthly ) * (1 + i_monthly);
+                    }
+
+                    const profit = totalValue - investedAmount;
+
+                    investedAmountResultEl.innerHTML = `💰 ${formatToRupees(investedAmount)}`;
+                    totalValueResultEl.innerHTML = `🏆 ${formatToRupees(totalValue)}`;
+                    profitResultEl.innerHTML = `💹 ${formatToRupees(profit)}`;
+
+                    if(resultSection) resultSection.style.display = 'block';
+                    if(resultSection) resultSection.scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+
+            if(interestRateInput) {
+                interestRateInput.addEventListener('keypress', function(event) {
+                    const charCode = (event.which) ? event.which : event.keyCode;
+                    if (charCode === 46 && this.value.indexOf('.') !== -1) { event.preventDefault(); return; }
+                    if (charCode !== 46 && charCode > 31 && (charCode < 48 || charCode > 57)) { event.preventDefault(); }
+                });
+            }
+            [monthlyInvestmentInput, timePeriodValueInput].forEach(input => {
+                if (input) {
+                    input.addEventListener('keypress', function(event) {
+                        const charCode = (event.which) ? event.which : event.keyCode;
+                        if (charCode > 31 && (charCode < 48 || charCode > 57)) { event.preventDefault(); }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
